@@ -1,81 +1,393 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Cloud Load Balancer Simulator</title>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CloudEdu — Student Resource Portal</title>
 <style>
-body{
-font-family: Arial;
-text-align:center;
-background:#f4f4f4;
-}
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
 
-button{
-padding:10px 20px;
-font-size:16px;
-margin:20px;
-}
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface2: #1a1e28;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8ecf4;
+    --muted: #7a8299;
+    --accent: #4f8ef7;
+    --accent2: #38d9a9;
+    --accent3: #f7974f;
+    --danger: #f76f6f;
+    --success: #38d9a9;
+    --font: 'Space Grotesk', sans-serif;
+    --display: 'Syne', sans-serif;
+  }
 
-.server{
-display:inline-block;
-background:white;
-padding:20px;
-margin:10px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
-}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  /* ─── TOPBAR ─── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,12,16,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 60px;
+  }
+  .logo { font-family: var(--display); font-size: 1.3rem; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 1.5rem; }
+  .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: color .2s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--text); }
+  .header-right { display: flex; align-items: center; gap: 1rem; }
+  .user-badge { background: var(--surface2); border: 1px solid var(--border2); border-radius: 20px; padding: 0.3rem 0.9rem; font-size: 0.83rem; color: var(--muted); cursor: pointer; }
+
+  /* ─── LAYOUT ─── */
+  .app { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 60px); }
+
+  /* ─── SIDEBAR ─── */
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    display: flex; flex-direction: column; gap: 0.25rem;
+  }
+  .sidebar-section { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); padding: 0.8rem 1.2rem 0.4rem; }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.6rem 1.2rem; cursor: pointer;
+    font-size: 0.88rem; font-weight: 500; color: var(--muted);
+    border-left: 2px solid transparent; transition: all .15s;
+  }
+  .sidebar-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .sidebar-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(79,142,247,0.07); }
+  .sidebar-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  /* ─── MAIN ─── */
+  main { padding: 2rem; overflow-y: auto; }
+
+  /* ─── VIEWS ─── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ─── HERO STATS ─── */
+  .page-title { font-family: var(--display); font-size: 1.8rem; margin-bottom: 0.25rem; }
+  .page-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 1.2rem 1.5rem;
+    position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat-card.blue::before { background: var(--accent); }
+  .stat-card.green::before { background: var(--accent2); }
+  .stat-card.orange::before { background: var(--accent3); }
+  .stat-card.red::before { background: var(--danger); }
+  .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.6rem; }
+  .stat-val { font-size: 1.9rem; font-weight: 700; font-family: var(--display); }
+  .stat-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; }
+  .stat-sub.up { color: var(--accent2); }
+  .stat-sub.down { color: var(--danger); }
+
+  /* ─── CARDS GRID ─── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .section-title { font-size: 1.05rem; font-weight: 600; }
+  .btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.84rem; font-weight: 600; cursor: pointer; transition: opacity .2s; font-family: var(--font); }
+  .btn:hover { opacity: 0.85; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); opacity: 1; }
+
+  .resources-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .resource-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem;
+    cursor: pointer; transition: border-color .2s, transform .15s;
+  }
+  .resource-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .rc-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.8rem; }
+  .rc-icon { font-size: 1.5rem; }
+  .rc-badge { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; }
+  .badge-pdf { background: rgba(247,151,79,0.15); color: var(--accent3); }
+  .badge-video { background: rgba(247,111,111,0.15); color: var(--danger); }
+  .badge-code { background: rgba(79,142,247,0.15); color: var(--accent); }
+  .badge-notes { background: rgba(56,217,169,0.15); color: var(--accent2); }
+  .rc-title { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .rc-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.8rem; }
+  .rc-footer { display: flex; align-items: center; justify-content: space-between; }
+  .rc-subject { font-size: 0.75rem; background: var(--surface2); padding: 0.2rem 0.5rem; border-radius: 4px; color: var(--muted); }
+  .rc-downloads { font-size: 0.75rem; color: var(--muted); }
+
+  /* ─── LOAD BALANCER DASHBOARD ─── */
+  .lb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+  .lb-card { background: var(--surface); border: 1px solid var(--border2); border-radius: 12px; padding: 1.5rem; }
+  .lb-card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  .servers-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .server-row { display: flex; align-items: center; gap: 0.75rem; }
+  .server-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+  .dot-orange { background: var(--accent3); box-shadow: 0 0 6px var(--accent3); }
+  .dot-red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+  .server-name { font-size: 0.87rem; font-weight: 500; flex: 1; }
+  .server-region { font-size: 0.75rem; color: var(--muted); }
+  .server-load-bar { flex: 2; background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
+  .server-load-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .fill-green { background: var(--accent2); }
+  .fill-orange { background: var(--accent3); }
+  .fill-red { background: var(--danger); }
+  .server-pct { font-size: 0.78rem; font-weight: 600; min-width: 36px; text-align: right; }
+
+  /* ─── CHART ─── */
+  .chart-area { height: 140px; display: flex; align-items: flex-end; gap: 4px; padding-top: 10px; }
+  .chart-bar { flex: 1; border-radius: 4px 4px 0 0; transition: height 0.6s ease, background 0.3s; min-height: 4px; background: rgba(79,142,247,0.5); }
+  .chart-bar:hover { background: var(--accent); }
+  .chart-labels { display: flex; gap: 4px; margin-top: 4px; }
+  .chart-labels span { flex: 1; font-size: 0.65rem; color: var(--muted); text-align: center; }
+
+  /* ─── MONITOR ─── */
+  .monitor-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .metric-pill {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem;
+    text-align: center;
+  }
+  .metric-pill .m-val { font-size: 1.6rem; font-weight: 700; font-family: var(--display); }
+  .metric-pill .m-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 0.2rem; }
+  .metric-pill.ok .m-val { color: var(--accent2); }
+  .metric-pill.warn .m-val { color: var(--accent3); }
+  .metric-pill.crit .m-val { color: var(--danger); }
+
+  .log-box {
+    background: #080a0d; border: 1px solid var(--border); border-radius: 10px;
+    padding: 1rem; font-family: 'Courier New', monospace; font-size: 0.76rem;
+    height: 200px; overflow-y: auto; color: #7a9f7a;
+    line-height: 1.6;
+  }
+  .log-box .log-err { color: #f76f6f; }
+  .log-box .log-warn { color: var(--accent3); }
+  .log-box .log-info { color: #4f8ef7; }
+
+  /* ─── SECURITY ─── */
+  .security-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .sec-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; }
+  .sec-header { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; }
+  .sec-icon { font-size: 1.3rem; }
+  .sec-title { font-size: 0.95rem; font-weight: 600; }
+  .sec-status { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; padding: 0.3rem 0.7rem; border-radius: 20px; width: fit-content; margin-top: 0.5rem; }
+  .status-ok { background: rgba(56,217,169,0.12); color: var(--accent2); }
+  .status-warn { background: rgba(247,151,79,0.12); color: var(--accent3); }
+  .rule-list { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.75rem; }
+  .rule-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--muted); }
+  .rule-item .bullet { width: 5px; height: 5px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
+
+  /* ─── UPLOAD MODAL ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; padding: 2rem; width: 480px; max-width: 95vw; }
+  .modal-title { font-family: var(--display); font-size: 1.3rem; margin-bottom: 0.3rem; }
+  .modal-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+  .upload-zone {
+    border: 2px dashed var(--border2); border-radius: 10px; padding: 2rem; text-align: center;
+    cursor: pointer; transition: border-color .2s; margin-bottom: 1rem;
+  }
+  .upload-zone:hover { border-color: var(--accent); }
+  .upload-zone .up-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  .upload-zone p { font-size: 0.85rem; color: var(--muted); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+  .form-row input, .form-row select, .modal input, .modal select {
+    background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px;
+    padding: 0.6rem 0.9rem; color: var(--text); font-size: 0.85rem; font-family: var(--font); width: 100%;
+  }
+  .form-row input:focus, .modal input:focus { outline: none; border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem; }
+  .btn-danger { background: var(--danger); }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem; background: var(--surface2);
+    border: 1px solid var(--border2); border-radius: 10px; padding: 0.8rem 1.2rem;
+    font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem;
+    transform: translateY(100px); opacity: 0; transition: all 0.3s;
+    z-index: 300; max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 3px solid var(--accent2); }
+  .toast.info { border-left: 3px solid var(--accent); }
+
+  /* ─── USERS ─── */
+  .users-table { width: 100%; border-collapse: collapse; }
+  .users-table th { text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); }
+  .users-table td { padding: 0.8rem 1rem; font-size: 0.87rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(79,142,247,0.2); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; color: var(--accent); margin-right: 0.5rem; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    aside { display: none; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .resources-grid { grid-template-columns: repeat(2, 1fr); }
+    .lb-grid { grid-template-columns: 1fr; }
+  }
 </style>
-
 </head>
-
 <body>
 
-<h1>Cloud Load Balancer Simulation</h1>
+<header>
+  <div class="logo">Cloud<span>Edu</span></div>
+  <nav class="nav-links">
+    <a class="active" onclick="showView('dashboard')">Dashboard</a>
+    <a onclick="showView('resources')">Resources</a>
+    <a onclick="showView('loadbalancer')">Load Balancer</a>
+    <a onclick="showView('monitor')">Monitor</a>
+    <a onclick="showView('security')">Security</a>
+    <a onclick="showView('users')">Users</a>
+  </nav>
+  <div class="header-right">
+    <div class="user-badge">👤 Aman · SE IT-C</div>
+  </div>
+</header>
 
-<button onclick="sendRequest()">Send Request</button>
+<div class="app">
+  <aside id="sidebar">
+    <div class="sidebar-section">Main</div>
+    <div class="sidebar-item active" onclick="showView('dashboard')"><span class="icon">🏠</span> Dashboard</div>
+    <div class="sidebar-item" onclick="showView('resources')"><span class="icon">📚</span> Resources</div>
+    <div class="sidebar-section">Cloud Services</div>
+    <div class="sidebar-item" onclick="showView('loadbalancer')"><span class="icon">⚖️</span> Load Balancer</div>
+    <div class="sidebar-item" onclick="showView('monitor')"><span class="icon">📊</span> Monitoring</div>
+    <div class="sidebar-item" onclick="showView('security')"><span class="icon">🔒</span> Security (IAM)</div>
+    <div class="sidebar-section">Admin</div>
+    <div class="sidebar-item" onclick="showView('users')"><span class="icon">👥</span> Users</div>
+  </aside>
 
-<div id="servers"></div>
+  <main>
 
-<script>
+    <!-- ── DASHBOARD ── -->
+    <div class="view active" id="view-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Cloud-Based Student Resource Portal — SE IT-C, TCET · AY 2025-26</div>
 
-let servers = [
-{ id:1, requests:0 },
-{ id:2, requests:0 },
-{ id:3, requests:0 }
-]
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-label">Total Resources</div>
+          <div class="stat-val" id="stat-resources">42</div>
+          <div class="stat-sub up">↑ 6 this week</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Active Users</div>
+          <div class="stat-val" id="stat-users">128</div>
+          <div class="stat-sub up">↑ 12 online now</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-label">Server Load</div>
+          <div class="stat-val" id="stat-load">34%</div>
+          <div class="stat-sub">Balanced across 3 nodes</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Uptime</div>
+          <div class="stat-val">99.8%</div>
+          <div class="stat-sub up">All systems operational</div>
+        </div>
+      </div>
 
-let current = 0
+      <div class="section-header">
+        <div class="section-title">Recent Resources</div>
+        <button class="btn btn-ghost" onclick="showView('resources')">View All</button>
+      </div>
+      <div class="resources-grid" id="recent-resources"></div>
+    </div>
 
-function sendRequest(){
+    <!-- ── RESOURCES ── -->
+    <div class="view" id="view-resources">
+      <div class="page-title">Resource Library</div>
+      <div class="page-sub">All uploaded study materials, notes, and references</div>
+      <div class="section-header">
+        <div style="display:flex;gap:0.5rem;">
+          <select id="filter-subject" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:0.45rem 0.8rem;color:var(--text);font-size:0.84rem;font-family:var(--font);" onchange="renderResources()">
+            <option value="">All Subjects</option>
+            <option>Cloud Computing</option>
+            <option>NoSQL DB</option>
+            <option>EVS</option>
+            <option>OS</option>
+          </select>
+          <select id="filter-type" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:0.45rem 0.8rem;color:var(--text);font-size:0.84rem;font-family:var(--font);" onchange="renderResources()">
+            <option value="">All Types</option>
+            <option>PDF</option>
+            <option>Video</option>
+            <option>Code</option>
+            <option>Notes</option>
+          </select>
+        </div>
+        <button class="btn" onclick="openUpload()">+ Upload Resource</button>
+      </div>
+      <div class="resources-grid" id="all-resources"></div>
+    </div>
 
-servers[current].requests++
+    <!-- ── LOAD BALANCER ── -->
+    <div class="view" id="view-loadbalancer">
+      <div class="page-title">Load Balancer</div>
+      <div class="page-sub">Real-time request distribution across cloud nodes using Round-Robin algorithm</div>
 
-current = (current + 1) % servers.length
+      <div class="lb-grid">
+        <div class="lb-card">
+          <h3>Server Nodes</h3>
+          <div class="servers-list" id="servers-list"></div>
+          <br>
+          <button class="btn" style="font-size:0.82rem;padding:0.45rem 0.9rem;" onclick="simulateRequest()">Simulate Request ▶</button>
+          <button class="btn btn-ghost" style="font-size:0.82rem;padding:0.45rem 0.9rem;margin-left:0.5rem;" onclick="addServerNode()">+ Add Node</button>
+        </div>
+        <div class="lb-card">
+          <h3>Request Distribution (last 12s)</h3>
+          <div class="chart-area" id="lb-chart"></div>
+          <div class="chart-labels" id="lb-labels"></div>
+        </div>
+      </div>
 
-render()
+      <div class="lb-card" style="margin-bottom:1.5rem;">
+        <h3>Load Balancing Algorithm</h3>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem;">
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;">
+            <input type="radio" name="algo" value="round-robin" checked onchange="setAlgo(this.value)"> Round-Robin
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;">
+            <input type="radio" name="algo" value="least-conn" onchange="setAlgo(this.value)"> Least Connections
+          </label>
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;">
+            <input type="radio" name="algo" value="weighted" onchange="setAlgo(this.value)"> Weighted
+          </label>
+        </div>
+        <div id="algo-desc" style="font-size:0.84rem;color:var(--muted);background:var(--surface2);padding:0.75rem 1rem;border-radius:8px;line-height:1.6;"></div>
+      </div>
 
-}
+      <div class="lb-card">
+        <h3>Live Request Log</h3>
+        <div class="log-box" id="lb-log">Waiting for requests...</div>
+      </div>
+    </div>
 
-function render(){
+    <!-- ── MONITOR ── -->
+    <div class="view" id="view-monitor">
+      <div class="page-title">Cloud Monitoring</div>
+      <div class="page-sub">Application performance metrics & infrastructure health</div>
 
-let html=""
-
-servers.forEach(s=>{
-html += `
-<div class="server">
-<h3>Server ${s.id}</h3>
-<p>Requests: ${s.requests}</p>
-</div>
-`
-})
-
-document.getElementById("servers").innerHTML = html
-
-}
-
-render()
-
-</script>
-
-</body>
-</html>
+      <div class="monitor-metrics">
+        <div class="metric-pill ok">
+          <div class="m-val" id="m-cpu">23%</div>
+          <div class="m-label">CPU Usage</div>
+        </div>
+        <div class="metric-pill ok">
+          <div class="m-val" id="m-mem">41%</div>
+          <div class="m-label">Memory</div>
+        </div>
+      </div>
+      </div>
+      </main>
+      </div>
+      </body>
+      </html>
