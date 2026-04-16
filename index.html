@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Cloud Load Balancer Simulator</title>
+
+<style>
+body{
+font-family: Arial;
+text-align:center;
+background:#f4f4f4;
+}
+
+button{
+padding:10px 20px;
+font-size:16px;
+margin:20px;
+}
+
+.server{
+display:inline-block;
+background:white;
+padding:20px;
+margin:10px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>Cloud Load Balancer Simulation</h1>
+
+<button onclick="sendRequest()">Send Request</button>
+
+<div id="servers"></div>
+
+<script>
+
+let servers = [
+{ id:1, requests:0 },
+{ id:2, requests:0 },
+{ id:3, requests:0 }
+]
+
+let current = 0
+
+function sendRequest(){
+
+servers[current].requests++
+
+current = (current + 1) % servers.length
+
+render()
+
+}
+
+function render(){
+
+let html=""
+
+servers.forEach(s=>{
+html += `
+<div class="server">
+<h3>Server ${s.id}</h3>
+<p>Requests: ${s.requests}</p>
+</div>
+`
+})
+
+document.getElementById("servers").innerHTML = html
+
+}
+
+render()
+
+</script>
+
+</body>
+</html>
